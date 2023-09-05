@@ -6,14 +6,15 @@ class EncryptionModuleInterface:
         """
         Encrypt plain data with key in the same size.
         """
-        pass
+        return bytes()
 
     @staticmethod
     def decrypt(key:bytes, encrypted_data:bytes) -> bytes:
         """
         Decrypt encrypted data with key in the same size.
         """
-        pass
+        return bytes()
+        
 
 class XorEncryptionModule(EncryptionModuleInterface):
 
