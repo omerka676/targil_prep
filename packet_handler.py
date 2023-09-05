@@ -1,16 +1,16 @@
 from itertools import filterfalse
 from scapy.all import *
 from filter import Filter, Verifier
-from xor_module import XorModule
+from encryptor import Encryptor
 
 class PacketHandler(): 
-    def __init__(self, packet_filter : Filter, encryption_module : XorModule) -> None:
+    def __init__(self, packet_filter : Filter, encryption_module : Encryptor) -> None:
         self.filter = packet_filter
         self.encryption_module = encryption_module
 
 
     def handle_packets(self, pkt):
-        filter_res = self.filter.filter()
+        filter_res = self.filter.filter(pkt)
         if filter_res == Verifier.NOT_VALID:
             return
         
@@ -20,6 +20,7 @@ class PacketHandler():
             payload = self.encryption_module.decrypt(bytes(pkt[RAW].payload))
 
         pkt[RAW].payload = payload
+
         #change mac
         
         send(pkt)    
