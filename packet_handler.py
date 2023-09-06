@@ -3,10 +3,12 @@ from scapy.all import *
 from filter import Filter, Verifier
 from encryptor import Encryptor
 
-class PacketHandler(): 
-    def __init__(self, packet_filter : Filter, encryption_module : Encryptor) -> None:
+class PacketHandler:
+
+    def __init__(self, packet_filter:Filter, encryption_module:Encryptor, opposite_enc_ip:str) -> None:
         self.filter = packet_filter
         self.encryption_module = encryption_module
+        self.opposite_enc_ip = opposite_enc_ip
 
 
     def handle_packets(self, pkt):
@@ -15,15 +17,20 @@ class PacketHandler():
             return
         
         if filter_res == Verifier.ENCRYPT:
-            payload = self.encryption_module.encrypt(bytes(pkt[RAW].payload))
+            # Copy all the packet from ip layer
+            pkt = pkt[IP]
+            
+            encrypted_packet = self.encryption_module.encrypt(bytes(pkt))
+            new_packet = Ether()/IP(dst=self.opposite_enc_ip)
+            new_packet.add_payload(encrypted_packet)
         else:
-            payload = self.encryption_module.decrypt(bytes(pkt[RAW].payload))
-
-        pkt[RAW].payload = payload
+            decrypted_packet = self.encryption_module.decrypt(pkt[Raw].load)
+            new_packet = Ether()
+            new_packet = bytes(new_packet) + decrypted_packet
 
         #change mac
         
-        send(pkt)    
+        send(new_packet)    
     
     def run(self):
         sniff(filter='tcp', prn=self.handle_packets)
